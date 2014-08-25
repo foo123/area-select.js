@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        
+        <title>Area Select</title>
+        
+        <style type="text/css">
+            body {
+                position:relative;
+                font-family: Monospace;
+                font-size:12px;
+                background-color: #121212;
+                color:#aaa;
+                margin: 0;
+                padding:0;
+                height:100%;
+                min-height:900px; 
+                overflow:scroll;
+            }
+            
+            .img-area-select {
+                border: 1px dashed #79b900;
+                background: rgba(128, 128, 128, 0.4);
+            }
+        </style>
+        <script src="../src/areaselect.js"></script>
+    </head>
+    <body>
+        <style>#forkongithub a{background:#c83022;color:#fff;text-decoration:none;font-family:arial, sans-serif;text-align:center;font-weight:bold;padding:5px 40px;font-size:0.9rem;line-height:1.4rem;position:relative;transition:0.5s;}#forkongithub a:hover{background:#c83022;color:#fff;}#forkongithub a::before,#forkongithub a::after{content:"";width:100%;display:block;position:absolute;z-index:100;top:1px;left:0;height:1px;background:#fff;}#forkongithub a::after{bottom:1px;top:auto;}@media screen and (min-width:800px){#forkongithub{position:absolute;display:block;z-index:100;top:0;right:0;width:200px;overflow:hidden;height:200px;}#forkongithub a{width:200px;position:absolute;top:60px;right:-60px;transform:rotate(45deg);-webkit-transform:rotate(45deg);box-shadow:4px 4px 10px rgba(0,0,0,0.8);}}</style><span id="forkongithub"><a href="https://github.com/foo123/area-select.js">Select me on GitHub</a></span>
+        
+        <header id="header">
+            <h1>Area Select Test</h1><br /><br />
+        </header>
+        
+        <div id="container" class="panel">
+        </div>
+        <script>
+        //<![CDATA[
+        var img = "./img.jpg", image, areaSelect, container = document.getElementById('container');
+        
+        image = new Image();
+        image.onload = function() {
+            container.appendChild( image );
+            areaSelect = new AreaSelect(image, { className: 'img-area-select', onSelection: function(sel){
+                console.log(sel);
+            }});
+        };
+        image.src = img;
+        //]]>
+        </script>
+    </body>
+</html>
