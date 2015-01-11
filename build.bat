@@ -8,10 +8,10 @@ REM #
 REM ###################################################
 
 REM to use the python build tool do:
-REM python ..\scripts\buildtools\build.py --deps ".\dependencies"
+REM python ..\Beeld\Beeld.py --config ".\config.custom"
 
 REM to use the php build tool do:
-REM php -f ..\scripts\buildtools\build.php -- --deps=".\dependencies"
+REM php -f ..\Beeld\Beeld.php -- --config=".\config.custom"
 
 REM to use the node build tool do:
-node ..\scripts\buildtools\build.js --deps ".\dependencies"
+node ..\Beeld\Beeld.js --config ".\config.custom"

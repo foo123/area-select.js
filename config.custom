@@ -1,7 +1,7 @@
 ###################################################
 #
 #   The buildtools repository is at:
-#   https://github.com/foo123/scripts/buildtools
+#   https://github.com/foo123/Beeld
 #
 ###################################################
 
@@ -15,18 +15,17 @@
 # A key and/or value can be quoted (with ", ' or `, quotes) or unquoted
 # Lines with one or multiple '@'s define the end of that many previous blocks
 
-SRC =[]
+src =[]
     ./src/areaselect.js
 
 @ # end block
 
-MINIFY ={}
+minify ={}
     
-    "UGLIFY" =[]
+    "uglifyjs" =[]
         -m -c
     @ # end block
     
 @ # end block
 
-OUT =
-./build/areaselect.min.js
+out = ./build/areaselect.min.js
