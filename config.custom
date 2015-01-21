@@ -5,17 +5,22 @@
 #
 ###################################################
 
-src =[]
-    ./src/areaselect.js
-
-@ # end block
-
-minify ={}
+tasks =[{}]
     
-    "uglifyjs" =[]
-        -m -c
-    @ # end block
+    build =[{}]
     
-@ # end block
+        src =[]
+            ./src/areaselect.js
+        @
 
-out = ./build/areaselect.min.js
+        minify ={}
+            
+            uglifyjs =[]
+                -m -c
+            @
+        @
+
+        out = ./build/areaselect.min.js
+    @
+
+@
