@@ -39,9 +39,15 @@
         image = new Image();
         image.onload = function() {
             container.appendChild( image );
-            areaSelect = new AreaSelect(image, { /*className: 'area-select',*/ onSelection: function( el, sel ){
-                console.log(sel);
-            }});
+            areaSelect = new AreaSelect(image, {
+                /*ratioYX: 0.7,*/
+                minHeight: 20,
+                maxHeight: 300,
+                className: 'my-area-select',
+                onSelection: function( el, sel ){
+                    console.log( sel );
+                }
+            });
         };
         image.src = img;
         //]]>

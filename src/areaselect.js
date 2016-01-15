@@ -1,7 +1,7 @@
 /**
 *  area-select.js
 *  A simple js class to select rectabgular regions in DOM elements (image, canvas, video, etc..)
-*  @VERSION: 0.5.0
+*  @VERSION: 1.0.0
 *
 *  https://github.com/foo123/area-select.js
 *  @author: Nikos M.  http://nikos-web-development.netai.net/
@@ -23,7 +23,7 @@ else if ( !(name in root) ) /* Browser/WebWorker/.. */
     /* module factory */        function( undef ) {
 "use strict";
 
-var VERSION = "0.5.0", abs = Math.abs, round = Math.round,
+var VERSION = "1.0.0", abs = Math.abs, round = Math.round,
     int = function( x ){ return parseInt(x||0,10)||0; },
     float = function( x ){ return parseFloat(x||0,10)||0; },
     trim_re = /^\s+|\s+$/g,
@@ -120,35 +120,29 @@ function AreaSelect( el, options )
     self.selection = null;
     
     var area = self.area = {x: 0, y: 0, w: 0, h: 0};
-    area.main = div( !!options.className ? 'area-select marching-ants '+options.className : 'area-select marching-ants' );
-    area.main.appendChild( area.n = div( 'area-select-resize area-select-resize-n' ) );
-    area.main.appendChild( area.e = div( 'area-select-resize area-select-resize-e' ) );
-    area.main.appendChild( area.s = div( 'area-select-resize area-select-resize-s' ) );
-    area.main.appendChild( area.w = div( 'area-select-resize area-select-resize-w' ) );
-    area.main.appendChild( area.nw = div( 'area-select-resize area-select-resize-nw' ) );
-    area.main.appendChild( area.ne = div( 'area-select-resize area-select-resize-ne' ) );
-    area.main.appendChild( area.sw = div( 'area-select-resize area-select-resize-sw' ) );
-    area.main.appendChild( area.se = div( 'area-select-resize area-select-resize-se' ) );
+    area.main = div( !!options.className ? 'area-select area-select-marching-ants '+options.className : 'area-select area-select-marching-ants' );
+    area.main.appendChild( area.__n = div( 'area-select-resize area-select-resize-n' ) );
+    area.main.appendChild( area.__e = div( 'area-select-resize area-select-resize-e' ) );
+    area.main.appendChild( area.__s = div( 'area-select-resize area-select-resize-s' ) );
+    area.main.appendChild( area.__w = div( 'area-select-resize area-select-resize-w' ) );
+    area.main.appendChild( area.__nw = div( 'area-select-resize area-select-resize-nw' ) );
+    area.main.appendChild( area.__ne = div( 'area-select-resize area-select-resize-ne' ) );
+    area.main.appendChild( area.__sw = div( 'area-select-resize area-select-resize-sw' ) );
+    area.main.appendChild( area.__se = div( 'area-select-resize area-select-resize-se' ) );
     area.main.style.position = 'absolute';
     area.main.style.display = 'none';
     area.main.style.left = 0 + 'px';
     area.main.style.top = 0 + 'px';
     area.main.style.width = 0 + 'px';
     area.main.style.height = 0 + 'px';
-    area.n.__RESIZE = RESIZE_N;
-    area.s.__RESIZE = RESIZE_S;
-    area.n__DIR = 'n';
-    area.s.__DIR = 's';
-    area.e.__RESIZE = RESIZE_E;
-    area.w.__RESIZE = RESIZE_W;
-    area.e__DIR = 'e';
-    area.w.__DIR = 'w';
-    area.ne.__RESIZE = RESIZE_N | RESIZE_E;
-    area.nw.__RESIZE = RESIZE_N | RESIZE_W;
-    area.se.__RESIZE = RESIZE_S | RESIZE_E;
-    area.sw.__RESIZE = RESIZE_S | RESIZE_W;
-    area.ne__DIR = 'ne'; area.nw.__DIR = 'nw';
-    area.se__DIR = 'se'; area.sw.__DIR = 'sw';
+    area.__n.__RESIZE = RESIZE_N; area.__n.__DIR = 'n';
+    area.__s.__RESIZE = RESIZE_S; area.__s.__DIR = 's';
+    area.__e.__RESIZE = RESIZE_E; area.__e.__DIR = 'e';
+    area.__w.__RESIZE = RESIZE_W; area.__w.__DIR = 'w';
+    area.__ne.__RESIZE = RESIZE_N | RESIZE_E; area.__ne.__DIR = 'ne';
+    area.__nw.__RESIZE = RESIZE_N | RESIZE_W; area.__nw.__DIR = 'nw';
+    area.__se.__RESIZE = RESIZE_S | RESIZE_E; area.__se.__DIR = 'se';
+    area.__sw.__RESIZE = RESIZE_S | RESIZE_W; area.__sw.__DIR = 'sw';
     el.parentNode.appendChild( area.main );
     
     self.options = {
@@ -156,8 +150,8 @@ function AreaSelect( el, options )
         minHeight: null != options.minHeight ? int(options.minHeight) : null,
         maxWidth: null != options.maxWidth ? int(options.maxWidth) : null,
         maxHeight: null != options.maxHeight ? int(options.maxHeight) : null,
-        ratioX: null != options.ratioX ? float(options.ratioX) : null,
-        ratioY: null != options.ratioY ? float(options.ratioY) : null,
+        ratioXY: null != options.ratioXY ? float(options.ratioXY) : null,
+        ratioYX: null != options.ratioYX ? float(options.ratioYX) : null,
         withBorders: undef !== options.withBorders ? !!options.withBorders : false,
         onSelect: 'function' === typeof options.onSelect ? options.onSelect : null
     };
@@ -177,11 +171,21 @@ function AreaSelect( el, options )
                 scrollLeft: el.scrollLeft,
                 scrollTop: el.scrollTop
             },
-            style = computed_style( el ),
-            borderLeftWidth = o.withBorders ? int(style['borderLeftWidth']) : 0,
-            borderTopWidth = o.withBorders ? int(style['borderTopWidth']) : 0
+            style, borderLeftWidth = 0, borderTopWidth = 0
         ;
-
+        
+        if ( o.withBorders )
+        {
+            style = computed_style( el );
+            borderLeftWidth = int(style['borderLeftWidth']);
+            borderTopWidth = int(style['borderTopWidth']);
+        }
+        else
+        {
+            borderLeftWidth = 0;
+            borderTopWidth = 0;
+        }
+        
         // http://www.jacklmoore.com/notes/mouse-position/
         left = e.clientX - borderLeftWidth - rect.left;
         top = e.clientY - borderTopWidth - rect.top;
@@ -200,9 +204,11 @@ function AreaSelect( el, options )
         area.main.style.height = 0 + 'px';
         area.main.style.cursor = 'se-resize';
         addClass(el, 'area-selecting');
+        addClass(area.main, 'area-select-active');
+        addClass(area.main, 'area-select-create');
         addEvent(doc.body, 'mousemove', onMouseMove);
         addEvent(doc.body, 'mouseup', onMouseUp);
-        return;
+        //return;
     };
     
     var move = function( e ){
@@ -218,11 +224,21 @@ function AreaSelect( el, options )
                 /*scrollLeft: el.scrollLeft,
                 scrollTop: el.scrollTop*/
             },
-            style = computed_style( el ),
-            borderLeftWidth = o.withBorders ? int(style['borderLeftWidth']) : 0,
-            borderTopWidth = o.withBorders ? int(style['borderTopWidth']) : 0
+            style, borderLeftWidth = 0, borderTopWidth = 0
         ;
 
+        if ( o.withBorders )
+        {
+            style = computed_style( el );
+            borderLeftWidth = int(style['borderLeftWidth']);
+            borderTopWidth = int(style['borderTopWidth']);
+        }
+        else
+        {
+            borderLeftWidth = 0;
+            borderTopWidth = 0;
+        }
+        
         left = e.clientX - borderLeftWidth - rect.left;
         top = e.clientY - borderTopWidth - rect.top;
         
@@ -234,22 +250,24 @@ function AreaSelect( el, options )
         action = MOVE;
         area.main.style.cursor = 'move';
         addClass(el, 'area-selecting');
+        addClass(area.main, 'area-select-active');
+        addClass(area.main, 'area-select-move');
         addEvent(doc.body, 'mousemove', onMouseMove);
         addEvent(doc.body, 'mouseup', onMouseUp);
-        return;
+        //return;
     };
     
     var resize = function( e ){
         e = e || window.event;
         var target = e.target, area = self.area;
-        if ( area.n !== target && 
-            area.s !== target && 
-            area.e !== target && 
-            area.w !== target && 
-            area.ne !== target && 
-            area.nw !== target && 
-            area.se !== target && 
-            area.sw !== target
+        if ( area.__n !== target && 
+            area.__s !== target && 
+            area.__e !== target && 
+            area.__w !== target && 
+            area.__ne !== target && 
+            area.__nw !== target && 
+            area.__se !== target && 
+            area.__sw !== target
         ) return;
         var o = self.options, el = self.el, 
             rect = el.getBoundingClientRect( ),
@@ -261,11 +279,21 @@ function AreaSelect( el, options )
                 /*scrollLeft: el.scrollLeft,
                 scrollTop: el.scrollTop*/
             },
-            style = computed_style( el ),
-            borderLeftWidth = o.withBorders ? int(style['borderLeftWidth']) : 0,
-            borderTopWidth = o.withBorders ? int(style['borderTopWidth']) : 0
+            style, borderLeftWidth = 0, borderTopWidth = 0
         ;
 
+        if ( o.withBorders )
+        {
+            style = computed_style( el );
+            borderLeftWidth = int(style['borderLeftWidth']);
+            borderTopWidth = int(style['borderTopWidth']);
+        }
+        else
+        {
+            borderLeftWidth = 0;
+            borderTopWidth = 0;
+        }
+        
         left = e.clientX - borderLeftWidth - rect.left;
         top = e.clientY - borderTopWidth - rect.top;
         
@@ -277,11 +305,13 @@ function AreaSelect( el, options )
         action = target.__RESIZE || 0;
         area.x0 = area.x; area.y0 = area.y;
         area.x1 = area.x+area.w; area.y1 = area.y+area.h;
-        area.main.style.cursor = 'se-resize';
+        area.main.style.cursor = (target.__DIR||'se')+'-resize';
         addClass(el, 'area-selecting');
+        addClass(area.main, 'area-select-active');
+        addClass(area.main, 'area-select-resize');
         addEvent(doc.body, 'mousemove', onMouseMove);
         addEvent(doc.body, 'mouseup', onMouseUp);
-        return;
+        //return;
     };
     
     var onMouseMove = function( e ){
@@ -296,12 +326,22 @@ function AreaSelect( el, options )
                 scrollLeft: el.scrollLeft,
                 scrollTop: el.scrollTop
             },
-            style = computed_style( el ),
-            borderLeftWidth = o.withBorders ? int(style['borderLeftWidth']) : 0,
-            borderTopWidth = o.withBorders ? int(style['borderTopWidth']) : 0,
+            style, borderLeftWidth = 0, borderTopWidth = 0,
             cursorX = 'e', cursorY = 's', x, y
         ;
 
+        if ( o.withBorders )
+        {
+            style = computed_style( el );
+            borderLeftWidth = int(style['borderLeftWidth']);
+            borderTopWidth = int(style['borderTopWidth']);
+        }
+        else
+        {
+            borderLeftWidth = 0;
+            borderTopWidth = 0;
+        }
+        
         curLeft = e.clientX - borderLeftWidth - rect.left;
         curTop = e.clientY - borderTopWidth - rect.top;
         
@@ -337,11 +377,14 @@ function AreaSelect( el, options )
                 area.h = curTop - top;
             }
             
+            if ( o.ratioYX ) area.h = round(area.w*o.ratioYX);
+            else if ( o.ratioXY ) area.w = round(area.h*o.ratioXY);
+            
             if ( null != o.minWidth && area.w < o.minWidth ) area.w = o.minWidth;
             if ( null != o.minHeight && area.h < o.minHeight ) area.h = o.minHeight;
             if ( null != o.maxWidth && area.w > o.maxWidth ) area.w = o.maxWidth;
             if ( null != o.maxHeight && area.h > o.maxHeight ) area.h = o.maxHeight;
-            
+
             if ( area.x+area.w > offset.width ) area.w = offset.width-area.x-1;
             if ( area.y+area.h > offset.height ) area.h = offset.height-area.y-1;
             
@@ -368,80 +411,88 @@ function AreaSelect( el, options )
         }
         else if ( RESIZE & action )
         {
-            if ( RESIZE_X & action )
+            if ( RESIZE_E & action )
             {
-                if ( RESIZE_E & action )
+                if ( curLeft < area.x0 )
                 {
-                    if ( curLeft < area.x0 )
-                    {
-                        area.x = curLeft;
-                        area.w = area.x0-curLeft;
-                    }
-                    else
-                    {
-                        area.x = area.x0;
-                        area.w = curLeft-area.x0;
-                    }
+                    area.x = curLeft;
+                    area.w = area.x0-curLeft;
                 }
-                else /*if ( RESIZE_W & action )*/
+                else
                 {
-                    if ( curLeft > area.x1 )
-                    {
-                        area.x = area.x1;
-                        area.w = curLeft-area.x1;
-                    }
-                    else
-                    {
-                        area.x = curLeft;
-                        area.w = area.x1-curLeft;
-                    }
+                    area.x = area.x0;
+                    area.w = curLeft-area.x0;
                 }
-                if ( area.w < 0 ) area.w = -area.w;
-                if ( null != o.minWidth && area.w < o.minWidth ) area.w = o.minWidth;
-                if ( null != o.maxWidth && area.w > o.maxWidth ) area.w = o.maxWidth;
-                if ( area.x+area.w > offset.width ) area.w = offset.width-area.x-1;
-                area.main.style.left = (offset.left-offset.scrollLeft + area.x) + 'px';
-                area.main.style.width = area.w + 'px';
+            }
+            if ( RESIZE_W & action )
+            {
+                if ( curLeft > area.x1 )
+                {
+                    area.x = area.x1;
+                    area.w = curLeft-area.x1;
+                }
+                else
+                {
+                    area.x = curLeft;
+                    area.w = area.x1-curLeft;
+                }
+            }
+            if ( RESIZE_S & action)
+            {
+                if ( curTop < area.y0 )
+                {
+                    area.y = curTop;
+                    area.h = area.y0-curTop;
+                }
+                else
+                {
+                    area.y = area.y0;
+                    area.h = curTop-area.y0;
+                }
+            }
+            if ( RESIZE_N & action)
+            {
+                if ( curTop > area.y1 )
+                {
+                    area.y = area.y1;
+                    area.h = curTop-area.y1;
+                }
+                else
+                {
+                    area.y = curTop;
+                    area.h = area.y1-curTop;
+                }
             }
             
-            if ( RESIZE_Y & action )
+            if ( o.ratioYX )
             {
-                if ( RESIZE_S & action)
-                {
-                    if ( curTop < area.y0 )
-                    {
-                        area.y = curTop;
-                        area.h = area.y0-curTop;
-                    }
-                    else
-                    {
-                        area.y = area.y0;
-                        area.h = curTop-area.y0;
-                    }
-                }
-                else /*if ( RESIZE_N & action)*/
-                {
-                    if ( curTop > area.y1 )
-                    {
-                        area.y = area.y1;
-                        area.h = curTop-area.y1;
-                    }
-                    else
-                    {
-                        area.y = curTop;
-                        area.h = area.y1-curTop;
-                    }
-                }
-                if ( area.h < 0 ) area.h = -area.h;
-                if ( null != o.minHeight && area.h < o.minHeight ) area.h = o.minHeight;
-                if ( null != o.maxHeight && area.h > o.maxHeight ) area.h = o.maxHeight;
-                if ( area.y+area.h > offset.height ) area.h = offset.height-area.y-1;
-                area.main.style.top = (offset.top-offset.scrollTop + area.y) + 'px';
-                area.main.style.height = area.h + 'px';
+                if ( !(RESIZE_X & action) )
+                    area.w = round(area.h/o.ratioYX);
+                else
+                    area.h = round(area.w*o.ratioYX);
             }
+            else if ( o.ratioXY )
+            {
+                if ( !(RESIZE_Y & action) )
+                    area.h = round(area.w/o.ratioXY);
+                else
+                    area.w = round(area.h*o.ratioXY);
+            }
+            
+            if ( null != o.minWidth && area.w < o.minWidth ) area.w = o.minWidth;
+            if ( null != o.maxWidth && area.w > o.maxWidth ) area.w = o.maxWidth;
+            if ( null != o.minHeight && area.h < o.minHeight ) area.h = o.minHeight;
+            if ( null != o.maxHeight && area.h > o.maxHeight ) area.h = o.maxHeight;
+            if ( area.x+area.w > offset.width ) area.w = offset.width-area.x-1;
+            if ( area.y+area.h > offset.height ) area.h = offset.height-area.y-1;
+            
+            area.main.style.left = (offset.left-offset.scrollLeft + area.x) + 'px';
+            area.main.style.top = (offset.top-offset.scrollTop + area.y) + 'px';
+            area.main.style.width = area.w + 'px';
+            area.main.style.height = area.h + 'px';
             area.main.style.cursor = e.target.__DIR+'-resize';
         }
-        return;
+        //return;
     };
     
     var onMouseUp = function( e ){
@@ -457,11 +508,17 @@ function AreaSelect( el, options )
         };
         left = top = curLeft = curTop = 0;
         
-        removeClass(el, 'area-selecting');
-        area.main.style.cursor = '';
-        action = NOP;
         removeEvent(doc.body, 'mousemove', onMouseMove);
         removeEvent(doc.body, 'mouseup', onMouseUp);
+        
+        if ( CREATE & action ) removeClass(area.main, 'area-select-create');
+        else if ( MOVE & action ) removeClass(area.main, 'area-select-move');
+        else if ( RESIZE & action ) removeClass(area.main, 'area-select-resize');
+        removeClass(area.main, 'area-select-active');
+        removeClass(el, 'area-selecting');
+        area.main.style.cursor = '';
+        
+        action = NOP;
         
         if ( o.onSelect )
         {
@@ -469,18 +526,18 @@ function AreaSelect( el, options )
                 o.onSelect.call( self, self.el, self.getSelection() );
             }, 10);
         }
-        return;
+        //return;
     };
     
     addEvent(el, 'mousedown', el.__area_select_evt = create);
-    addEvent(area.n, 'mousedown', resize);
-    addEvent(area.s, 'mousedown', resize);
-    addEvent(area.e, 'mousedown', resize);
-    addEvent(area.w, 'mousedown', resize);
-    addEvent(area.ne, 'mousedown', resize);
-    addEvent(area.nw, 'mousedown', resize);
-    addEvent(area.se, 'mousedown', resize);
-    addEvent(area.sw, 'mousedown', resize);
+    addEvent(area.__n, 'mousedown', resize);
+    addEvent(area.__s, 'mousedown', resize);
+    addEvent(area.__e, 'mousedown', resize);
+    addEvent(area.__w, 'mousedown', resize);
+    addEvent(area.__ne, 'mousedown', resize);
+    addEvent(area.__nw, 'mousedown', resize);
+    addEvent(area.__se, 'mousedown', resize);
+    addEvent(area.__sw, 'mousedown', resize);
     addEvent(area.main, 'mousedown', move);
 };
 AreaSelect.VERSION = VERSION;
