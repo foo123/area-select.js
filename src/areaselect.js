@@ -1,10 +1,9 @@
 /**
 *  area-select.js
-*  A simple js class to select rectabgular regions in DOM elements (image, canvas, video, etc..)
-*  @VERSION: 1.0.0
+*  A simple js class to select rectangular regions in DOM elements (image, canvas, video, etc..)
+*  @VERSION: 1.1.0
 *
 *  https://github.com/foo123/area-select.js
-*  @author: Nikos M.  http://nikos-web-development.netai.net/
 *
 **/
 !function( root, name, factory ) {
@@ -18,12 +17,12 @@ else if ( ('function'===typeof(define))&&define.amd&&('function'===typeof(requir
     define(name,['require','exports','module'],function( ){return factory.call( root );});
 else if ( !(name in root) ) /* Browser/WebWorker/.. */
     (root[ name ] = (m=factory.call( root )))&&('function'===typeof(define))&&define.amd&&define(function( ){return m;} );
-}(  /* current root */          this, 
+}(  /* current root */          'undefined' !== typeof self ? self : this, 
     /* module name */           "AreaSelect",
     /* module factory */        function( undef ) {
 "use strict";
 
-var VERSION = "1.0.0", abs = Math.abs, round = Math.round,
+var VERSION = "1.1.0", abs = Math.abs, round = Math.round,
     int = function( x ){ return parseInt(x||0,10)||0; },
     float = function( x ){ return parseFloat(x||0,10)||0; },
     trim_re = /^\s+|\s+$/g,
@@ -71,7 +70,7 @@ function removeClass( el, className )
 function addEvent( el, type, handler )
 {
     if ( el.attachEvent ) el.attachEvent( 'on'+type, handler );
-    else el.addEventListener( type, handler );
+    else el.addEventListener( type, handler, false );
 }
 function removeEvent( el, type, handler )
 {
@@ -158,9 +157,10 @@ function AreaSelect( el, options )
     
     var left = 0, top = 0, curLeft = 0, curTop = 0, action = NOP, cursor = '';
     
-    var create = function( e ){
+    var create = function( e, isTouch ){
         e = e || window.event;
         if ( self.el !== e.target ) return;
+        if ( isTouch && e.preventDefault ) e.preventDefault();
         var o = self.options, el = self.el, area = self.area,
             rect = el.getBoundingClientRect( ),
             offset = {
@@ -186,9 +186,19 @@ function AreaSelect( el, options )
             borderTopWidth = 0;
         }
         
-        // http://www.jacklmoore.com/notes/mouse-position/
-        left = e.clientX - borderLeftWidth - rect.left;
-        top = e.clientY - borderTopWidth - rect.top;
+        if ( isTouch )
+        {
+            // https://developer.mozilla.org/en-US/docs/Web/API/Touch_events
+            // https://developer.mozilla.org/en-US/docs/Web/API/Touch/clientX
+            left = e.changedTouches[0].clientX - borderLeftWidth - rect.left;
+            top = e.changedTouches[0].clientY - borderTopWidth - rect.top;
+        }
+        else
+        {
+            // http://www.jacklmoore.com/notes/mouse-position/
+            left = e.clientX - borderLeftWidth - rect.left;
+            top = e.clientY - borderTopWidth - rect.top;
+        }
         
         if ( left < 0 ) left = 0;
         else if ( left >= offset.width ) left = offset.width-1;
@@ -206,14 +216,24 @@ function AreaSelect( el, options )
         addClass(el, 'area-selecting');
         addClass(area.main, 'area-select-active');
         addClass(area.main, 'area-select-create');
-        addEvent(doc.body, 'mousemove', onMouseMove);
-        addEvent(doc.body, 'mouseup', onMouseUp);
+        if ( isTouch )
+        {
+            addEvent(doc.body, 'touchcancel', onTouchCancel);
+            addEvent(doc.body, 'touchmove', onTouchMove);
+            addEvent(doc.body, 'touchend', onTouchEnd);
+        }
+        else
+        {
+            addEvent(doc.body, 'mousemove', onMouseMove);
+            addEvent(doc.body, 'mouseup', onMouseUp);
+        }
         //return;
     };
     
-    var move = function( e ){
+    var move = function( e, isTouch ){
         e = e || window.event;
         if ( self.area.main !== e.target ) return;
+        if ( isTouch && e.preventDefault ) e.preventDefault();
         var o = self.options, el = self.el, area = self.area,
             rect = el.getBoundingClientRect( ),
             offset = {
@@ -239,8 +259,16 @@ function AreaSelect( el, options )
             borderTopWidth = 0;
         }
         
-        left = e.clientX - borderLeftWidth - rect.left;
-        top = e.clientY - borderTopWidth - rect.top;
+        if ( isTouch )
+        {
+            left = e.changedTouches[0].clientX - borderLeftWidth - rect.left;
+            top = e.changedTouches[0].clientY - borderTopWidth - rect.top;
+        }
+        else
+        {
+            left = e.clientX - borderLeftWidth - rect.left;
+            top = e.clientY - borderTopWidth - rect.top;
+        }
         
         if ( left < 0 ) left = 0;
         else if ( left >= offset.width ) left = offset.width-1;
@@ -252,12 +280,21 @@ function AreaSelect( el, options )
         addClass(el, 'area-selecting');
         addClass(area.main, 'area-select-active');
         addClass(area.main, 'area-select-move');
-        addEvent(doc.body, 'mousemove', onMouseMove);
-        addEvent(doc.body, 'mouseup', onMouseUp);
+        if ( isTouch )
+        {
+            addEvent(doc.body, 'touchcancel', onTouchCancel);
+            addEvent(doc.body, 'touchmove', onTouchMove);
+            addEvent(doc.body, 'touchend', onTouchEnd);
+        }
+        else
+        {
+            addEvent(doc.body, 'mousemove', onMouseMove);
+            addEvent(doc.body, 'mouseup', onMouseUp);
+        }
         //return;
     };
     
-    var resize = function( e ){
+    var resize = function( e, isTouch ){
         e = e || window.event;
         var target = e.target, area = self.area;
         if ( area.__n !== target && 
@@ -269,6 +306,7 @@ function AreaSelect( el, options )
             area.__se !== target && 
             area.__sw !== target
         ) return;
+        if ( isTouch && e.preventDefault ) e.preventDefault();
         var o = self.options, el = self.el, 
             rect = el.getBoundingClientRect( ),
             offset = {
@@ -294,8 +332,16 @@ function AreaSelect( el, options )
             borderTopWidth = 0;
         }
         
-        left = e.clientX - borderLeftWidth - rect.left;
-        top = e.clientY - borderTopWidth - rect.top;
+        if ( isTouch )
+        {
+            left = e.changedTouches[0].clientX - borderLeftWidth - rect.left;
+            top = e.changedTouches[0].clientY - borderTopWidth - rect.top;
+        }
+        else
+        {
+            left = e.clientX - borderLeftWidth - rect.left;
+            top = e.clientY - borderTopWidth - rect.top;
+        }
         
         if ( left < 0 ) left = 0;
         else if ( left >= offset.width ) left = offset.width-1;
@@ -309,13 +355,42 @@ function AreaSelect( el, options )
         addClass(el, 'area-selecting');
         addClass(area.main, 'area-select-active');
         addClass(area.main, 'area-select-resize');
-        addEvent(doc.body, 'mousemove', onMouseMove);
-        addEvent(doc.body, 'mouseup', onMouseUp);
+        if ( isTouch )
+        {
+            addEvent(doc.body, 'touchcancel', onTouchCancel);
+            addEvent(doc.body, 'touchmove', onTouchMove);
+            addEvent(doc.body, 'touchend', onTouchEnd);
+        }
+        else
+        {
+            addEvent(doc.body, 'mousemove', onMouseMove);
+            addEvent(doc.body, 'mouseup', onMouseUp);
+        }
         //return;
     };
     
-    var onMouseMove = function( e ){
+    var onMouseMove = function(e){onMove(e, false);};
+    var onMouseUp = function(e){onEnd(e, false);};
+    var onTouchMove = function(e){onMove(e, true);};
+    var onTouchEnd = function(e){onEnd(e, true);};
+    var onTouchCancel = function( e ) {
         e = e || window.event;
+        if ( e.preventDefault ) e.preventDefault();
+        removeEvent(doc.body, 'touchcancel', onTouchCancel);
+        removeEvent(doc.body, 'touchmove', onTouchMove);
+        removeEvent(doc.body, 'touchend', onTouchEnd);
+        left = top = curLeft = curTop = 0;
+        if ( CREATE & action ) removeClass(area.main, 'area-select-create');
+        else if ( MOVE & action ) removeClass(area.main, 'area-select-move');
+        else if ( RESIZE & action ) removeClass(area.main, 'area-select-resize');
+        removeClass(area.main, 'area-select-active');
+        removeClass(el, 'area-selecting');
+        area.main.style.cursor = '';
+        action = NOP;
+    };
+    var onMove = function( e, isTouch ){
+        e = e || window.event;
+        if ( isTouch && e.preventDefault ) e.preventDefault();
         var o = self.options, el = self.el, area = self.area,
             rect = el.getBoundingClientRect( ),
             offset = {
@@ -342,8 +417,16 @@ function AreaSelect( el, options )
             borderTopWidth = 0;
         }
         
-        curLeft = e.clientX - borderLeftWidth - rect.left;
-        curTop = e.clientY - borderTopWidth - rect.top;
+        if ( isTouch )
+        {
+            curLeft = e.changedTouches[0].clientX - borderLeftWidth - rect.left;
+            curTop = e.changedTouches[0].clientY - borderTopWidth - rect.top;
+        }
+        else
+        {
+            curLeft = e.clientX - borderLeftWidth - rect.left;
+            curTop = e.clientY - borderTopWidth - rect.top;
+        }
         
         if ( curLeft < 0 ) curLeft = 0;
         else if ( curLeft >= offset.width ) curLeft = offset.width-1;
@@ -495,10 +578,11 @@ function AreaSelect( el, options )
         //return;
     };
     
-    var onMouseUp = function( e ){
+    var onEnd = function( e, isTouch ){
         var el = self.el, area = self.area, o = self.options;
         
         e = e || window.event;
+        if ( isTouch && e.preventDefault ) e.preventDefault();
         
         self.selection = {
             x1: round(area.x),
@@ -508,8 +592,17 @@ function AreaSelect( el, options )
         };
         left = top = curLeft = curTop = 0;
         
-        removeEvent(doc.body, 'mousemove', onMouseMove);
-        removeEvent(doc.body, 'mouseup', onMouseUp);
+        if ( isTouch )
+        {
+            removeEvent(doc.body, 'touchcancel', onTouchCancel);
+            removeEvent(doc.body, 'touchmove', onTouchMove);
+            removeEvent(doc.body, 'touchend', onTouchEnd);
+        }
+        else
+        {
+            removeEvent(doc.body, 'mousemove', onMouseMove);
+            removeEvent(doc.body, 'mouseup', onMouseUp);
+        }
         
         if ( CREATE & action ) removeClass(area.main, 'area-select-create');
         else if ( MOVE & action ) removeClass(area.main, 'area-select-move');
@@ -528,17 +621,27 @@ function AreaSelect( el, options )
         }
         //return;
     };
-    
-    addEvent(el, 'mousedown', el.__area_select_evt = create);
-    addEvent(area.__n, 'mousedown', resize);
-    addEvent(area.__s, 'mousedown', resize);
-    addEvent(area.__e, 'mousedown', resize);
-    addEvent(area.__w, 'mousedown', resize);
-    addEvent(area.__ne, 'mousedown', resize);
-    addEvent(area.__nw, 'mousedown', resize);
-    addEvent(area.__se, 'mousedown', resize);
-    addEvent(area.__sw, 'mousedown', resize);
-    addEvent(area.main, 'mousedown', move);
+    el.__area_select_evt = [function(e){create(e, false);}, function(e){create(e, true);}];
+    addEvent(el, 'mousedown', el.__area_select_evt[0]);
+    addEvent(el, 'touchstart', el.__area_select_evt[1]);
+    addEvent(area.__n, 'mousedown', function(e){resize(e, false);});
+    addEvent(area.__s, 'mousedown', function(e){resize(e, false);});
+    addEvent(area.__e, 'mousedown', function(e){resize(e, false);});
+    addEvent(area.__w, 'mousedown', function(e){resize(e, false);});
+    addEvent(area.__ne, 'mousedown', function(e){resize(e, false);});
+    addEvent(area.__nw, 'mousedown', function(e){resize(e, false);});
+    addEvent(area.__se, 'mousedown', function(e){resize(e, false);});
+    addEvent(area.__sw, 'mousedown', function(e){resize(e, false);});
+    addEvent(area.__n, 'touchstart', function(e){resize(e, true);});
+    addEvent(area.__s, 'touchstart', function(e){resize(e, true);});
+    addEvent(area.__e, 'touchstart', function(e){resize(e, true);});
+    addEvent(area.__w, 'touchstart', function(e){resize(e, true);});
+    addEvent(area.__ne, 'touchstart', function(e){resize(e, true);});
+    addEvent(area.__nw, 'touchstart', function(e){resize(e, true);});
+    addEvent(area.__se, 'touchstart', function(e){resize(e, true);});
+    addEvent(area.__sw, 'touchstart', function(e){resize(e, true);});
+    addEvent(area.main, 'mousedown', function(e){move(e, false);});
+    addEvent(area.main, 'touchstart', function(e){move(e, true);});
 };
 AreaSelect.VERSION = VERSION;
 
@@ -558,7 +661,8 @@ AreaSelect.prototype = {
         {
             if ( el.__area_select_evt )
             {
-                removeEvent(el, 'mousedown', el.__area_select_evt);
+                removeEvent(el, 'mousedown', el.__area_select_evt[0]);
+                removeEvent(el, 'touchstart', el.__area_select_evt[1]);
                 el.__area_select_evt = null;
             }
             if ( area && area.main ) el.parentNode.removeChild( area.main );

@@ -9,4 +9,5 @@ A simple js class (no dependencies) to select rectangular regions in DOM element
 
 **Live Example**
 
-[Select area to apply real-time video filters](https://foo123.github.com/examples/filter-video/)
+* [Simple Demo](https://foo123.github.com/examples/area-select/)
+* [Select area to apply real-time video filters](https://foo123.github.com/examples/filter-video/)
