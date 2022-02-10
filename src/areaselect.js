@@ -6,20 +6,17 @@
 *  https://github.com/foo123/area-select.js
 *
 **/
-!function( root, name, factory ) {
+!function(root, name, factory) {
 "use strict";
-var m;
-if ( ('undefined'!==typeof Components)&&('object'===typeof Components.classes)&&('object'===typeof Components.classesByID)&&Components.utils&&('function'===typeof Components.utils['import']) ) /* XPCOM */
-    (root.EXPORTED_SYMBOLS = [ name ]) && (root[ name ] = factory.call( root ));
-else if ( ('object'===typeof module)&&module.exports ) /* CommonJS */
-    module.exports = factory.call( root );
-else if ( ('function'===typeof(define))&&define.amd&&('function'===typeof(require))&&('function'===typeof(require.specified))&&require.specified(name) ) /* AMD */
-    define(name,['require','exports','module'],function( ){return factory.call( root );});
-else if ( !(name in root) ) /* Browser/WebWorker/.. */
-    (root[ name ] = (m=factory.call( root )))&&('function'===typeof(define))&&define.amd&&define(function( ){return m;} );
-}(  /* current root */          'undefined' !== typeof self ? self : this, 
-    /* module name */           "AreaSelect",
-    /* module factory */        function( undef ) {
+if ('object' === typeof exports)
+    // CommonJS module
+    module.exports = factory();
+else if ('function' === typeof define && define.amd)
+    // AMD. Register as an anonymous module.
+    define(function(req) {return factory();});
+else
+    root[name] = factory();
+}('undefined' !== typeof self ? self : this, 'AreaSelect', function(undef) {
 "use strict";
 
 var VERSION = "1.1.0", abs = Math.abs, round = Math.round,

@@ -11,4 +11,4 @@ A simple JavaScript class (no dependencies) to select rectangular regions in DOM
 **Live Example**
 
 * [Simple Demo](https://foo123.github.io/examples/area-select/)
-* [Select area to apply real-time video filters](https://foo123.github.com/examples/filter-video/)
+* [Select area to apply real-time video filters](https://foo123.github.io/examples/filter-video/)
